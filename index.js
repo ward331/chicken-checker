@@ -28,13 +28,17 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
 
   try {
     const stats = await getPlayerStats(username, tracked[username]);
+
+    // 🔧 Always post to the "chicken-checker" text channel
     const textChannel = newState.guild.channels.cache.find(
-      ch => ch.name === newState.channel.name && ch.type === 0 // GUILD_TEXT
+      ch => ch.name === "chicken-checker" && ch.type === 0 // GUILD_TEXT
     );
 
     if (textChannel) {
       await textChannel.send(`📊 **${username} PUBG Stats**
 KD: ${stats.kd} | Win%: ${stats.winPct}`);
+    } else {
+      console.warn("⚠️ chicken-checker text channel not found!");
     }
   } catch (err) {
     console.error(`❌ Failed to fetch stats for ${username}`, err);
