@@ -1,25 +1,7 @@
-const { Client, GatewayIntentBits, Events } = require("discord.js");
-const fs = require("fs");
-require("dotenv").config();
-
-const getPlayerStats = require("./utils/getPlayerStats");
-
-const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildVoiceStates,
-    GatewayIntentBits.GuildMessages
-  ]
-});
-
-const tracked = require("./members.json");
-
-client.once(Events.ClientReady, () => {
-  console.log(`✅ Logged in as ${client.user.tag}`);
-});
-
 client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
   const member = newState.member;
+  console.log(`[VOICE] ${member?.user?.username} joined ${newState.channel?.name}`);
+
   if (!member || !newState.channel || oldState.channel === newState.channel) return;
 
   const username = member.displayName;
@@ -29,9 +11,8 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
   try {
     const stats = await getPlayerStats(username, tracked[username]);
 
-    // 🔧 Always post to the "chicken-checker" text channel
     const textChannel = newState.guild.channels.cache.find(
-      ch => ch.name === "chicken-checker" && ch.type === 0 // GUILD_TEXT
+      ch => ch.name === "chicken-checker" && ch.type === 0
     );
 
     if (textChannel) {
@@ -45,4 +26,3 @@ KD: ${stats.kd} | Win%: ${stats.winPct}`);
   }
 });
 
-client.login(process.env.DISCORD_TOKEN);
