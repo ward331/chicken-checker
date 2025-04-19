@@ -1,5 +1,7 @@
 {
   "_note": "Format is 'Discord Display Name': 'PUBG/Steam Name'",
-
-  "DrunkNAngryDwarf": "DrunkNAngryDwarf"
+  "DrunkNAngryDwarf": {
+    "name": "DrunkNAngryDwarf",
+    "platform": "steam"
+  }
 }
