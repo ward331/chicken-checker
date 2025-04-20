@@ -1,28 +1,42 @@
 const fetch = require("node-fetch");
-require("dotenv").config();
 
-const headers = {
-  Authorization: `Bearer ${process.env.PUBG_API_KEY}`,
-  Accept: "application/vnd.api+json"
-};
+async function getPlayerStats(name, platform) {
+  const apiKey = process.env.PUBG_API_KEY;
 
-async function getPlayerStats(playerName, platform = "steam") {
-  const baseUrl = `https://api.pubg.com/shards/${platform}`;
-  const playerRes = await fetch(`${baseUrl}/players?filter[playerNames]=${playerName}`, { headers });
-  const playerData = await playerRes.json();
+  if (!apiKey) {
+    console.error("❌ PUBG_API_KEY not found in environment variables.");
+    throw new Error("PUBG_API_KEY not found");
+  }
 
-  if (!playerData?.data?.length) throw new Error(`Player ${playerName} not found`);
+  const headers = {
+    Authorization: `Bearer ${apiKey}`,
+    Accept: "application/vnd.api+json"
+  };
+
+  const playerUrl = `https://api.pubg.com/shards/${platform}/players?filter[playerNames]=${name}`;
+  console.log(`Fetching player ID for ${name} from: ${playerUrl}`);
+
+  const playerResponse = await fetch(playerUrl, { headers });
+  const playerData = await playerResponse.json();
+
+  if (!playerData.data || playerData.data.length === 0) {
+    console.error(`❌ Player ${name} not found`);
+    throw new Error(`Player ${name} not found`);
+  }
 
   const playerId = playerData.data[0].id;
 
-  const seasonRes = await fetch(`${baseUrl}/players/${playerId}/seasons/lifetime`, { headers });
-  const seasonData = await seasonRes.json();
+  const seasonUrl = `https://api.pubg.com/shards/${platform}/players/${playerId}/seasons/lifetime`;
+  console.log(`Fetching season stats from: ${seasonUrl}`);
 
-  const stats = seasonData?.data?.attributes?.gameModeStats?.squad;
+  const seasonResponse = await fetch(seasonUrl, { headers });
+  const seasonData = await seasonResponse.json();
+
+  const stats = seasonData.data.attributes.gameModeStats["squad-fpp"];
 
   return {
-    kd: (stats.kills / stats.losses).toFixed(2),
-    winPct: ((stats.wins / stats.games) * 100).toFixed(1)
+    kd: (stats.kills / stats.roundsPlayed).toFixed(2),
+    winPct: ((stats.wins / stats.roundsPlayed) * 100).toFixed(1)
   };
 }
 
